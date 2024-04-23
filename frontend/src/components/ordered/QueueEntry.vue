@@ -138,11 +138,30 @@
 										<span>Undo</span>
 									</button>
 								</template>
+								<!-- TODO: How to make it only show up on the student side.... -->
+								<button
+									class="button is-warning"
+									:class="{ 'is-loading': awayRequestRunning }"
+									v-if="!admin && !entry.helping && !entry.away"  
+									v-on:click="setAway"
+								>
+									<span class="icon"><font-awesome-icon icon="clock"/></span>
+									<span>Away</span>
+								</button>
+								<button
+									class="button is-warning"
+									:class="{ 'is-loading': awayRequestRunning }"
+									v-if="!admin && !entry.helping && entry.away"  
+									v-on:click="setAway"
+								>
+									<span class="icon"><font-awesome-icon icon="undo"/></span>
+									<span>Back</span>
+								</button>
 								<button
 									class="button is-danger"
 									:class="{ 'is-loading': removeRequestRunning }"
 									v-on:click="removeEntry"
-									v-else-if="!entry.helping"
+									v-if="admin || !entry.helping"
 								>
 									<span class="icon"><font-awesome-icon icon="times"/></span>
 									<span>Cancel</span>
@@ -244,6 +263,22 @@
 						>
 							<font-awesome-icon
 								icon="frown-open"
+								class="is-size-1 is-size-6-touch"
+								fixed-width
+							/>
+						</b-tooltip>
+					</div>
+					<div
+						class="is-pulled-right"
+						key="away"
+						v-if="!stack && entry.away"
+					>
+						<b-tooltip
+							label="This student is currently away."
+							position="is-left"
+						>
+							<font-awesome-icon
+								icon="clock"
 								class="is-size-1 is-size-6-touch"
 								fixed-width
 							/>
@@ -354,6 +389,42 @@ export default class QueueEntryDisplay extends Vue {
 			if (res.status !== 204) {
 				return ErrorDialog(res);
 			}
+		});
+	}
+
+
+	awayRequestRunning = false; // To handle the loading state for the 'Away' button
+	setAway() {
+		if (this.awayRequestRunning) {
+			console.log("Request is already running");
+			return; // Prevents multiple simultaneous requests
+		}
+		this.awayRequestRunning = true;
+		console.log("Setting status to Away for entry:", this.entry.id);
+		
+		// Assuming the entry's status needs to be set to 'Away'
+		const statusPayload = {
+			status: "Away"
+		};
+
+		fetch(process.env.BASE_URL + `api/queues/${this.queue.id}/entries/${this.entry.id}/status`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(statusPayload)
+		}).then(res => {
+			this.awayRequestRunning = false; // Reset the loading state
+			if (res.ok) {
+				console.log("Status set to Away successfully");
+			} else {
+				return res.json().then(data => {
+					console.error("Failed to set status to Away:", data);
+					throw new Error("Failed to set status: " + data.message);
+				});
+			}
+		}).catch(err => {
+			console.error("Error setting status to Away:", err);
 		});
 	}
 
