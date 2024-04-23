@@ -147,7 +147,30 @@
 									<span class="icon"><font-awesome-icon icon="times"/></span>
 									<span>Cancel</span>
 								</button>
+								
+								<!-- TODO: How to make it only show up on the student side.... -->
+								<button
+									class="button is-danger"
+									:class="{ 'is-loading': removeRequestRunning }"
+									v-if="!entry.helping && entry.status !== 'away'"  
+									v-on:click="setAway"
+								>
+									<span class="icon"><font-awesome-icon icon="times"/></span>
+									<span>A</span>
+								</button>
+
+								<button
+									class="button is-danger"
+									:class="{ 'is-loading': removeRequestRunning }"
+									v-if="!entry.helping && entry.status === 'away'" 
+									v-on:click="setAway" 
+								>
+									<span class="icon"><font-awesome-icon icon="times"/></span>
+									<span>B</span>
+								</button>
+
 							</template>
+
 							<template v-if="!entry.pinned && admin">
 								<button
 									class="button is-primary"
@@ -354,6 +377,47 @@ export default class QueueEntryDisplay extends Vue {
 			if (res.status !== 204) {
 				return ErrorDialog(res);
 			}
+		});
+	}
+
+	// setAwayRequestRunning = false; // To handle the loading state for the 'Away' button
+    // setAway() {
+	// 	console.log("in set away")
+	// }
+	
+	setAwayRequestRunning = false; // To handle the loading state for the 'Away' button
+
+	setAway() {
+		if (this.setAwayRequestRunning) {
+			console.log("Request is already running");
+			return; // Prevents multiple simultaneous requests
+		}
+		this.setAwayRequestRunning = true;
+		console.log("Setting status to Away for entry:", this.entry.id);
+		
+		// Assuming the entry's status needs to be set to 'Away'
+		const statusPayload = {
+			status: "Away"
+		};
+
+		fetch(process.env.BASE_URL + `api/queues/${this.queue.id}/entries/${this.entry.id}/status`, {
+			method: 'PUT',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(statusPayload)
+		}).then(res => {
+			this.setAwayRequestRunning = false; // Reset the loading state
+			if (res.ok) {
+				console.log("Status set to Away successfully");
+			} else {
+				return res.json().then(data => {
+					console.error("Failed to set status to Away:", data);
+					throw new Error("Failed to set status: " + data.message);
+				});
+			}
+		}).catch(err => {
+			console.error("Error setting status to Away:", err);
 		});
 	}
 

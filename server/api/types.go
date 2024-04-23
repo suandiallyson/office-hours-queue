@@ -67,6 +67,7 @@ type QueueEntry struct {
 	RemovedBy   sql.NullString `json:"-" db:"removed_by"`
 	RemovedAt   sql.NullTime   `json:"-" db:"removed_at"`
 	Helped      bool           `json:"-" db:"helped"`
+	Status      string         `json:"status,omitempty" db:"queue_entry_status"` // Added status field
 }
 
 func (q *QueueEntry) RemovedEntry() *RemovedQueueEntry {

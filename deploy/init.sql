@@ -128,6 +128,8 @@ ALTER TABLE public.messages OWNER TO queue;
 -- Name: queue_entries; Type: TABLE; Schema: public; Owner: queue
 --
 
+CREATE TYPE queue_entry_status AS ENUM ('away', 'available');
+
 CREATE TABLE public.queue_entries (
     id character(27) NOT NULL COLLATE pg_catalog."C",
     queue character(27) NOT NULL COLLATE pg_catalog."C",
@@ -143,6 +145,7 @@ CREATE TABLE public.queue_entries (
     removed_by text,
     removed_at timestamp without time zone,
     helped boolean DEFAULT true NOT NULL
+    status queue_entry_status NOT NULL DEFAULT 'available'
 );
 
 

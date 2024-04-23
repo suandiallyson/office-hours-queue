@@ -1513,3 +1513,62 @@ func (s *Server) SetNotHelped(sh setNotHelped) E {
 		return s.sendResponse(http.StatusNoContent, nil, w, r)
 	}
 }
+
+// Define the statusSetter interface with the required methods
+type setStatus interface {
+	getQueueEntry
+	SetStudentStatus(ctx context.Context, entry ksuid.KSUID, status string) error
+}
+
+// SetStatus updates the status of a student in the queue
+func (s *Server) SetStatus(sh setStatus) E {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		q := r.Context().Value(queueContextKey).(*Queue)
+		id := chi.URLParam(r, "entry_id")
+		email := r.Context().Value(emailContextKey).(string)
+		l := s.logger.With(
+			RequestIDContextKey, r.Context().Value(RequestIDContextKey),
+			"entry_id", id,
+			"queue_id", q.ID,
+			"course_id", q.Course,
+			"email", email,
+		)
+
+		entryID, err := ksuid.Parse(id)
+		if err != nil {
+			l.Warnw("failed to parse entry ID", "err", err)
+			return StatusError{
+				http.StatusNotFound,
+				"Unable to find the specified queue entry.",
+			}
+		}
+
+		entry, err := sh.GetQueueEntry(r.Context(), entryID, true)
+		if err != nil {
+			l.Warnw("attempted to get non-existent queue entry with valid ksuid", "err", err)
+			return StatusError{
+				http.StatusNotFound,
+				"Unable to find the specified queue entry.",
+			}
+		}
+
+		newStatus := "available"    // Setting the new status directly
+		if entry.Status == "away" { // Check if current status is "away"
+			err = sh.SetStudentStatus(r.Context(), entryID, newStatus)
+			if err != nil {
+				l.Errorw("failed to update student status", "err", err)
+				return err
+			}
+			entry.Status = newStatus
+			l.Infow("student status updated", "new_status", newStatus)
+
+			// Publishing changes to WebSocket topics
+			s.ps.Pub(WS("STATUS_UPDATE", entry), QueueTopicAdmin(q.ID))
+			s.ps.Pub(WS("STATUS_UPDATE", nil), QueueTopicEmail(q.ID, entry.Email))
+		} else {
+			l.Infow("no status update needed", "current_status", entry.Status)
+		}
+
+		return s.sendResponse(http.StatusNoContent, nil, w, r)
+	}
+}

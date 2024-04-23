@@ -12,6 +12,8 @@ export class QueueEntry {
 	public helping!: boolean;
 	public helped!: boolean;
 	public online!: boolean;
+	public status: string | undefined; // Added status property
+
 
 	constructor(data: { [index: string]: any }) {
 		this.id = data['id'];
@@ -25,6 +27,8 @@ export class QueueEntry {
 		this.helping = data['helping'] || false;
 		this.helped = data['helped'] || false;
 		this.online = data['online'] || false;
+		this.status = data['status'] || 'available'; // Set default status as 'available' if not provided
+
 	}
 
 	public update(data: { [index: string]: any }) {
@@ -37,6 +41,7 @@ export class QueueEntry {
 		this.helping = data['helping'];
 		this.helped = data['helped'] || this.helped;
 		this.online = data['online'] || this.online;
+		this.status = data['status'] || this.status; // Update status if provided
 	}
 
 	// Get the humanized timestamp in relation to time.
