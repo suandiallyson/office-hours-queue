@@ -96,7 +96,7 @@
 								<button class="button is-warning" :class="{ 'is-loading': awayRequestRunning }"
 									v-if="!admin && !entry.helping && entry.away" v-on:click="setAway">
 									<span class="icon"><font-awesome-icon icon="undo" /></span>
-									<span>Back</span>
+									<span>Not Away</span>
 								</button>
 								<button class="button is-danger" :class="{ 'is-loading': removeRequestRunning }"
 									v-on:click="removeEntry" v-if="admin || !entry.helping">

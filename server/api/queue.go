@@ -1571,9 +1571,10 @@ func (s *Server) SetAway(sh setAway) E {
 				l.Infow("student status updated", "new_status", true)
 			}
 		
+		l.Infow("Entry status", "entry.Away", entry.Away)
 		// Publishing changes to WebSocket topics
-		s.ps.Pub(WS("ENTRY_UPDATE", entry.RemovedEntry()), QueueTopicAdmin(q.ID))
-		s.ps.Pub(WS("AWAY", nil), QueueTopicEmail(q.ID, entry.Email))
+		s.ps.Pub(WS("ENTRY_UPDATE", entry), QueueTopicAdmin(q.ID))
+		s.ps.Pub(WS("ENTRY_UPDATE", entry), QueueTopicEmail(q.ID, entry.Email))
 			
 		return s.sendResponse(http.StatusNoContent, nil, w, r)
 	}

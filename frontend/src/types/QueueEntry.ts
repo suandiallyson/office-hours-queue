@@ -9,10 +9,10 @@ export class QueueEntry {
 	public location: string | undefined;
 	public priority!: number;
 	public pinned!: boolean;
-	public helping!: boolean;
+	public helping!: boolean; //fixed 
 	public helped!: boolean;
 	public online!: boolean;
-	public away: boolean; // Renamed status to away
+	public away!: boolean; // Renamed status to away
 
 
 	constructor(data: { [index: string]: any }) {
@@ -41,7 +41,9 @@ export class QueueEntry {
 		this.helping = data['helping'];
 		this.helped = data['helped'] || this.helped;
 		this.online = data['online'] || this.online;
-		this.away = data['away'] || this.away; // Update status if provided
+		if(typeof data['away'] != "undefined") {
+			this.away = data['away']
+		}
 	}
 
 	// Get the humanized timestamp in relation to time.
